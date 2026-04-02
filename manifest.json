@@ -1,0 +1,17 @@
+{
+  "name": "MonCycle",
+  "short_name": "MonCycle",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#FAF7F5",
+  "theme_color": "#B05B72",
+  "description": "Suivi de cycle féminin artistique et privé.",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+

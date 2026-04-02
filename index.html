@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MonCycle — Suivi de cycle féminin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="manifest" href="manifest.json">
+<script src="pwa-handler.js" defer></script>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+/* ══════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════ */
+:root{
+  --bg:#FAF7F5;--bg2:#F2EBE5;--sur:#FFFFFF;--sur2:#FDF9F7;
+  --bd:#EAE0D8;--bd2:#D8CBBE;
+  --tx:#1C1614;--tx2:#6B5C55;--mu:#A8958D;
+  --rs:#B05B72;--rs2:#8A3F56;--rs-bg:rgba(176,91,114,.10);
+  --sg:#4D7C6F;--sg2:#356055;--sg-bg:rgba(77,124,111,.10);
+  --gd:#B8893A;--gd-bg:rgba(184,137,58,.10);
+  --rd:#C0392B;--rd-bg:rgba(192,57,43,.10);
+  --or:#C06030;--or-bg:rgba(192,96,48,.10);
+  --gr:#2E7D52;--gr-bg:rgba(46,125,82,.10);
+  --sh:0 1px 4px rgba(28,22,20,.06);
+  --sh2:0 4px 20px rgba(28,22,20,.08);
+  --sh3:0 16px 56px rgba(28,22,20,.14);
+  --r:14px;--rsm:10px;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+}
+body.dark{
+  --bg:#0F1117;--bg2:#171B24;--sur:#1C2130;--sur2:#222838;
+  --bd:#2A3040;--bd2:#363D50;
+  --tx:#EEE8E4;--tx2:#9A9098;--mu:#585060;
+  --rs:#D4788E;--rs2:#E8A0B0;--rs-bg:rgba(212,120,142,.13);
+  --sg:#6AADA0;--sg2:#8DCCC0;--sg-bg:rgba(106,173,160,.13);
+  --gd:#D4A04A;--gd-bg:rgba(212,160,74,.13);
+  --rd:#E05858;--rd-bg:rgba(224,88,88,.14);
+  --or:#E07840;--or-bg:rgba(224,120,64,.14);
+  --gr:#48A870;--gr-bg:rgba(72,168,112,.14);
+  --sh:0 1px 4px rgba(0,0,0,.3);
+  --sh2:0 4px 20px rgba(0,0,0,.38);
+  --sh3:0 16px 56px rgba(0,0,0,.55);
+}
+
+/* ══════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Outfit',system-ui,sans-serif;
+  background:var(--bg);color:var(--tx);line-height:1.6;
+  min-height:100vh;transition:background var(--tr),color var(--tr);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Cormorant Garamond',Georgia,serif;line-height:1.2;font-weight:600}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:99px}
+
+/* ══════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════ */
+.wrap{max-width:1380px;margin:0 auto;padding:0 28px}
+.layout{display:grid;gap:20px;grid-template-columns:320px 1fr;align-items:start}
+@media(max-width:1040px){.layout{grid-template-columns:1fr}}
+@media(max-width:640px){.wrap{padding:0 14px}}
+
+/* ══════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════ */
+#hdr{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--bd);
+  transition:background var(--tr),border-color var(--tr);
+}
+.hdr-inner{display:flex;align-items:center;gap:12px;padding:13px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-ico{
+  width:38px;height:38px;border-radius:11px;
+  background:var(--rs-bg);color:var(--rs);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.brand-txt h1{font-size:18px;color:var(--tx)}
+.brand-txt p{font-size:10px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase;margin-top:1px}
+.nav-wrap{
+  display:flex;padding:4px;background:var(--bg2);
+  border:1px solid var(--bd);border-radius:99px;margin:0 auto;gap:3px;
+}
+.nav-pill{
+  padding:7px 17px;border-radius:99px;border:none;background:transparent;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  color:var(--tx2);cursor:pointer;display:flex;align-items:center;gap:6px;
+  transition:var(--tr);white-space:nowrap;
+}
+.nav-pill.on{background:var(--sur);color:var(--rs);font-weight:600;box-shadow:var(--sh)}
+.nav-pill:not(.on):hover{color:var(--tx)}
+.hdr-acts{display:flex;gap:7px;align-items:center;margin-left:auto}
+
+/* ══════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 17px;border-radius:var(--rsm);border:none;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;transition:var(--tr);white-space:nowrap;
+}
+.btn:focus-visible{outline:2px solid var(--rs);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-p{background:var(--rs);color:#fff;box-shadow:0 2px 10px rgba(176,91,114,.22)}
+.btn-p:hover:not(:disabled){background:var(--rs2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(176,91,114,.32)}
+.btn-s{background:var(--sur);color:var(--tx);border:1px solid var(--bd2)}
+.btn-s:hover:not(:disabled){background:var(--sur2);border-color:var(--rs)}
+.btn-g{background:transparent;color:var(--tx2);border:1px solid var(--bd)}
+.btn-g:hover:not(:disabled){background:var(--bg2);color:var(--tx);border-color:var(--bd2)}
+.btn-d{background:var(--rd-bg);color:var(--rd);border:1px solid rgba(192,57,43,.2)}
+.btn-d:hover:not(:disabled){background:rgba(192,57,43,.18)}
+.btn-sg{background:var(--sg);color:#fff;box-shadow:0 2px 10px rgba(77,124,111,.22)}
+.btn-sg:hover:not(:disabled){background:var(--sg2);transform:translateY(-1px)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+.btn-ico{padding:8px;border-radius:9px}
+.w100{width:100%}
+
+/* ══════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════ */
+.card{
+  background:var(--sur);border:1px solid var(--bd);
+  border-radius:var(--r);padding:22px 24px;
+  box-shadow:var(--sh);transition:background var(--tr),border-color var(--tr);
+}
+.card-sm{padding:14px 16px}
+.card+.card,.card+div,.mb{margin-top:18px}
+
+/* ══════════════════════════════════════════════
+   FORMS
+══════════════════════════════════════════════ */
+.lbl{
+  display:block;font-size:11px;font-weight:600;color:var(--mu);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;
+}
+.inp{
+  width:100%;padding:10px 14px;border-radius:var(--rsm);
+  border:1.5px solid var(--bd);background:var(--bg2);
+  color:var(--tx);font-family:'Outfit',sans-serif;font-size:14px;
+  transition:var(--tr);appearance:none;-webkit-appearance:none;
+}
+.inp:focus{outline:none;border-color:var(--rs);background:var(--sur);box-shadow:0 0 0 3px rgba(176,91,114,.09)}
+.inp::placeholder{color:var(--mu)}
+textarea.inp{min-height:84px;resize:vertical;line-height:1.6}
+select.inp{
+  cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23A8958D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+.fld{margin-bottom:14px}
+.fld:last-child{margin-bottom:0}
+
+/* ══════════════════════════════════════════════
+   SYMPTOM CHIPS
+══════════════════════════════════════════════ */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{
+  padding:5px 12px;border-radius:99px;border:1.5px solid var(--bd);
+  background:var(--bg2);font-size:12px;font-weight:500;color:var(--tx2);
+  cursor:pointer;transition:var(--tr);user-select:none;
+  display:flex;align-items:center;gap:5px;
+}
+.chip:hover{border-color:var(--rs);color:var(--rs);background:var(--rs-bg)}
+.chip.on{background:var(--rs-bg);border-color:var(--rs);color:var(--rs);font-weight:600}
+.chip-ck{
+  width:13px;height:13px;border-radius:4px;border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;flex-shrink:0;transition:var(--tr);
+}
+.chip.on .chip-ck{background:var(--rs);border-color:var(--rs)}
+
+/* ══════════════════════════════════════════════
+   CALENDAR
+══════════════════════════════════════════════ */
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-h{text-align:center;padding:7px 2px;font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
+.cal-d{
+  aspect-ratio:1/1.1;padding:7px 5px;border-radius:10px;
+  background:transparent;border:1.5px solid transparent;
+  cursor:pointer;transition:all .15s ease;
+  display:flex;flex-direction:column;min-height:54px;
+}
+.cal-d:hover{background:var(--bg2);border-color:var(--bd)}
+.cal-d.empty{pointer-events:none;opacity:0}
+.cal-dn{font-size:12px;font-weight:600;color:var(--tx2);line-height:1}
+.cal-d.today .cal-dn{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--rs);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+}
+.cal-d.period{background:rgba(176,91,114,.09);border-color:rgba(176,91,114,.22)}
+.cal-d.ovul{background:rgba(77,124,111,.11);border-color:rgba(77,124,111,.3)}
+.cal-d.fertile{background:rgba(77,124,111,.06);border-color:rgba(77,124,111,.14)}
+.cal-d.today{border-color:var(--rs)!important;box-shadow:0 0 0 2px rgba(176,91,114,.14)}
+body.dark .cal-d.period{background:rgba(212,120,142,.13);border-color:rgba(212,120,142,.28)}
+body.dark .cal-d.ovul{background:rgba(106,173,160,.15);border-color:rgba(106,173,160,.35)}
+body.dark .cal-d.fertile{background:rgba(106,173,160,.08);border-color:rgba(106,173,160,.18)}
+.cdots{display:flex;flex-wrap:wrap;gap:3px;margin-top:auto;padding-top:3px}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;display:inline-block}
+.dp{background:var(--rs)}.do{background:var(--sg)}.df{background:var(--sg);opacity:.5}.de{background:var(--gd)}
+
+/* ══════════════════════════════════════════════
+   BADGES & RISK
+══════════════════════════════════════════════ */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 9px;border-radius:99px;
+  font-size:11px;font-weight:600;letter-spacing:.02em;
+}
+.b-rs{background:var(--rs-bg);color:var(--rs)}
+.b-sg{background:var(--sg-bg);color:var(--sg)}
+.b-gd{background:var(--gd-bg);color:var(--gd)}
+.b-gr{background:rgba(99,102,241,.1);color:#6366f1}
+.b-gy{background:var(--bg2);color:var(--tx2);border:1px solid var(--bd)}
+.b-rd{background:var(--rd-bg);color:var(--rd)}
+
+.risk{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 14px;border-radius:var(--rsm);
+  font-size:13px;font-weight:500;
+}
+.rk-r{background:var(--rd-bg);color:var(--rd);border:1px solid rgba(192,57,43,.18)}
+.rk-o{background:var(--or-bg);color:var(--or);border:1px solid rgba(192,96,48,.18)}
+.rk-g{background:var(--gr-bg);color:var(--gr);border:1px solid rgba(46,125,82,.18)}
+.rk-gy{background:var(--bg2);color:var(--tx2);border:1px solid var(--bd)}
+
+/* ══════════════════════════════════════════════
+   SUMMARY
+══════════════════════════════════════════════ */
+.srow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--bd);font-size:13px;
+}
+.srow:last-child{border-bottom:none}
+.sl{color:var(--tx2);font-weight:500}
+.sv{font-weight:600;text-align:right;max-width:58%}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:32px;line-height:1;color:var(--rs);font-weight:600}
+.prog-tr{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;border:1px solid var(--bd)}
+.prog-fi{height:100%;background:linear-gradient(90deg,var(--rs),var(--gd));border-radius:99px;transition:width .6s ease}
+
+/* ══════════════════════════════════════════════
+   KNOWLEDGE
+══════════════════════════════════════════════ */
+.kn-item{
+  display:flex;gap:12px;padding:13px 15px;
+  border-radius:var(--rsm);background:var(--sur2);
+  border:1px solid var(--bd);margin-bottom:9px;
+}
+.kn-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch}
+
+/* ══════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════ */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.50);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:18px;
+}
+.modal-bg.open{display:flex}
+.modal-box{
+  background:var(--sur);border:1px solid var(--bd2);border-radius:18px;
+  padding:26px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;
+  box-shadow:var(--sh3);animation:mIn .22s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes mIn{from{opacity:0;transform:scale(.93) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.m-title{font-size:18px;line-height:1.3;color:var(--tx)}
+.m-x{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);
+  background:var(--bg2);color:var(--mu);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-left:10px;transition:var(--tr);
+}
+.m-x:hover{background:var(--sur2);color:var(--tx)}
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{
+  background:var(--sur);border:1px solid var(--bd2);border-radius:11px;
+  padding:10px 15px;font-size:13px;font-weight:500;color:var(--tx);
+  box-shadow:var(--sh2);display:flex;align-items:center;gap:8px;
+  min-width:200px;max-width:290px;pointer-events:all;
+  animation:tIn .26s cubic-bezier(.34,1.2,.64,1);
+}
+.toast.out{animation:tOut .22s ease forwards}
+.t-ok{color:var(--sg)}.t-err{color:var(--rd)}.t-inf{color:#6366f1}.t-wrn{color:var(--gd)}
+@keyframes tIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{to{opacity:0;transform:translateX(16px)}}
+@media(max-width:520px){#toasts{left:12px;right:12px;bottom:12px}.toast{min-width:auto;max-width:100%}}
+
+/* ══════════════════════════════════════════════
+   LOCK SCREEN
+══════════════════════════════════════════════ */
+.lock-scr{
+  min-height:65vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:36px 20px;text-align:center;
+}
+.lock-ico{
+  width:62px;height:62px;border-radius:18px;
+  background:var(--rs-bg);color:var(--rs);
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+  transition:var(--tr);
+}
+.pdots{display:flex;gap:13px;margin:20px 0 24px}
+.pdot{
+  width:13px;height:13px;border-radius:50%;
+  border:2px solid var(--bd2);background:transparent;transition:all .18s ease;
+}
+.pdot.on{background:var(--rs);border-color:var(--rs);box-shadow:0 0 0 3px var(--rs-bg)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:218px}
+.pkey{
+  width:65px;height:65px;border-radius:50%;border:1.5px solid var(--bd);
+  background:var(--sur);font-family:'Cormorant Garamond',serif;font-size:22px;
+  color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .16s ease;box-shadow:var(--sh);font-weight:600;
+}
+.pkey:hover{background:var(--rs-bg);border-color:var(--rs);color:var(--rs);transform:scale(1.04)}
+.pkey:active{transform:scale(.95)}
+.pkey-del{font-size:15px;color:var(--mu);font-family:'Outfit',sans-serif}
+.pkey-0{grid-column:2}
+.perr{color:var(--rd);font-size:13px;font-weight:500;min-height:18px;margin-top:10px}
+
+/* ══════════════════════════════════════════════
+   PARTNER CARDS
+══════════════════════════════════════════════ */
+.pc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.pc{
+  background:var(--sur);border:1.5px solid var(--bd);
+  border-radius:var(--r);padding:18px 20px;cursor:pointer;
+  transition:all .2s ease;position:relative;overflow:hidden;
+}
+.pc::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--rs),var(--gd));opacity:0;transition:.2s;
+}
+.pc:hover{border-color:rgba(176,91,114,.35);box-shadow:0 5px 22px rgba(176,91,114,.1);transform:translateY(-2px)}
+.pc:hover::before{opacity:1}
+.pc-add{
+  border:1.5px dashed var(--bd2);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:9px;min-height:138px;
+  color:var(--mu);cursor:pointer;transition:var(--tr);border-radius:var(--r);
+}
+.pc-add:hover{border-color:var(--rs);color:var(--rs);background:var(--rs-bg);transform:translateY(-2px)}
+.pav{
+  width:42px;height:42px;border-radius:12px;
+  background:var(--rs-bg);color:var(--rs);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ══════════════════════════════════════════════
+   RELATION LOG ITEM
+══════════════════════════════════════════════ */
+.rlog{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;background:var(--sur2);border:1px solid var(--bd);
+  border-radius:10px;margin-bottom:8px;transition:var(--tr);
+}
+.rlog:hover{border-color:var(--bd2);background:var(--sur)}
+.rlog-date{font-size:11px;font-weight:700;color:var(--rs);text-transform:uppercase;letter-spacing:.05em;min-width:68px}
+
+/* ══════════════════════════════════════════════
+   STATUS BANNER
+══════════════════════════════════════════════ */
+.sbanner{
+  display:flex;align-items:flex-start;gap:14px;
+  border-radius:var(--rsm);padding:15px 17px;
+}
+.sb-r{background:var(--rd-bg);border:1px solid rgba(192,57,43,.18)}
+.sb-o{background:var(--or-bg);border:1px solid rgba(192,96,48,.18)}
+.sb-g{background:var(--gr-bg);border:1px solid rgba(46,125,82,.18)}
+.sb-gy{background:var(--bg2);border:1px solid var(--bd)}
+
+/* ══════════════════════════════════════════════
+   SECTION TITLE
+══════════════════════════════════════════════ */
+.sec-t{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--mu);display:flex;align-items:center;gap:9px;margin:20px 0 13px;
+}
+.sec-t::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* ══════════════════════════════════════════════
+   RECAP
+══════════════════════════════════════════════ */
+.recap-block{
+  background:var(--sur);border:1px solid var(--bd);
+  border-radius:var(--r);padding:18px 20px;margin-bottom:11px;
+}
+.recap-row{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 0;border-top:1px solid var(--bd);font-size:13px;flex-wrap:wrap;
+}
+
+/* ══════════════════════════════════════════════
+   DETAIL VIEW
+══════════════════════════════════════════════ */
+.detail-hdr{
+  display:flex;align-items:center;gap:13px;
+  padding-bottom:16px;border-bottom:1px solid var(--bd);margin-bottom:18px;flex-wrap:wrap;
+}
+.privacy-box{
+  background:rgba(77,124,111,.06);border:1px solid rgba(77,124,111,.18);
+  border-radius:var(--r);padding:16px 18px;margin-top:22px;
+}
+.hr{height:1px;background:var(--bd);margin:16px 0}
+
+/* ══════════════════════════════════════════════
+   PAGE SYSTEM
+══════════════════════════════════════════════ */
+.page{display:none}
+.page.on{display:block;animation:pgIn .2s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.pg-body{padding:22px 0}
+</style>
+</head>
+<body>
+
+<!-- TOASTS -->
+<div id="toasts" aria-live="polite"></div>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header id="hdr">
+<div class="wrap">
+<div class="hdr-inner">
+  <div class="brand">
+    <div class="brand-ico">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div class="brand-txt"><h1>MonCycle</h1><p>Suivi de cycle féminin</p></div>
+  </div>
+
+  <div class="nav-wrap">
+    <button class="nav-pill on" id="t-cycle" onclick="goPage('cycle')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Mon Cycle
+    </button>
+    <button class="nav-pill" id="t-int" onclick="goPage('int')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Mon Intimité
+    </button>
+  </div>
+
+  <div class="hdr-acts">
+    <button class="btn btn-g btn-sm btn-ico" onclick="toggleTheme()" title="Thème">
+      <svg id="ico-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="ico-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="btn btn-g btn-sm" onclick="openModal('m-export')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="hide-sm">Exporter</span>
+    </button>
+    <button class="btn btn-d btn-sm" onclick="clearAll()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      <span class="hide-sm">Effacer</span>
+    </button>
+  </div>
+</div>
+</div>
+</header>
+
+<!-- ══════════════════ PAGE: MON CYCLE ══════════════════ -->
+<div id="p-cycle" class="page on">
+<div class="wrap pg-body">
+<div class="layout">
+
+<!-- LEFT -->
+<div>
+  <!-- Settings -->
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--rs-bg);color:var(--rs);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 19.07l1.41-1.41M21 12h-2M5 12H3M19.07 19.07l-1.41-1.41M4.93 4.93l1.41 1.41M12 21v-2M12 5V3"/></svg>
+      </div>
+      <h3 style="font-size:16px">Paramètres du cycle</h3>
+    </div>
+    <div class="fld"><label class="lbl">Début du dernier cycle</label><input type="date" id="s-last" class="inp"/></div>
+    <div class="grid2">
+      <div class="fld"><label class="lbl">Durée du cycle (j)</label><input type="number" id="s-cycle" class="inp" min="20" max="45" value="28"/></div>
+      <div class="fld"><label class="lbl">Durée des règles (j)</label><input type="number" id="s-period" class="inp" min="1" max="10" value="5"/></div>
+    </div>
+    <div class="fld"><label class="lbl">Température basale °C — optionnel</label><input type="number" id="s-temp" class="inp" step="0.01" min="35" max="38.5" placeholder="36.50"/></div>
+    <button class="btn btn-p w100" onclick="saveSettings()" style="margin-top:2px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Enregistrer les paramètres
+    </button>
+  </div>
+
+  <!-- Saisie -->
+  <div class="card mb">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="width:32px;height:32px;border-radius:9px;background:rgba(99,102,241,.1);color:#6366f1;display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+      <h3 style="font-size:16px">Saisie quotidienne</h3>
+    </div>
+    <div class="fld"><label class="lbl">Date</label><input type="date" id="e-date" class="inp"/></div>
+    <div class="fld"><label class="lbl">Symptômes</label><div class="chips" id="sym-chips"></div></div>
+    <div class="fld"><label class="lbl">Autres symptômes</label><input type="text" id="e-other" class="inp" placeholder="Nausées, spotting, migraines…"/></div>
+    <div class="grid2">
+      <div class="fld"><label class="lbl">Humeur</label>
+        <select id="e-mood" class="inp">
+          <option value="serene">Sereine</option><option value="happy">Joyeuse</option>
+          <option value="neutral" selected>Neutre</option><option value="sad">Triste</option>
+          <option value="anxious">Anxieuse</option><option value="irritable">Irritable</option>
+          <option value="tired">Fatiguée</option><option value="energetic">Énergique</option>
+        </select>
+      </div>
+      <div class="fld"><label class="lbl">Intensité</label>
+        <select id="e-intensity" class="inp">
+          <option value="mild">Légère</option><option value="moderate" selected>Modérée</option><option value="severe">Forte</option>
+        </select>
+      </div>
+    </div>
+    <div class="fld"><label class="lbl">Notes cliniques</label><textarea id="e-notes" class="inp" placeholder="Observations, traitements…"></textarea></div>
+    <button class="btn btn-p w100" onclick="saveEntry()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Enregistrer l'entrée
+    </button>
+  </div>
+
+  <!-- Résumé -->
+  <div class="card" style="background:linear-gradient(145deg,var(--sur),var(--sur2))">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--sg-bg);color:var(--sg);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <h3 style="font-size:16px">Résumé du cycle</h3>
+    </div>
+    <div class="srow"><span class="sl">Phase actuelle</span><span class="sv" id="su-phase">—</span></div>
+    <div class="srow"><span class="sl">Jour du cycle</span><span class="sv" id="su-day">—</span></div>
+    <div class="srow"><span class="sl">Prochaines règles</span><strong class="sv" id="su-next">—</strong></div>
+    <div class="srow"><span class="sl">Ovulation estimée</span><span class="sv" id="su-ovul">—</span></div>
+    <div class="srow"><span class="sl">Fenêtre fertile</span><span class="sv" id="su-fert" style="font-size:12px">—</span></div>
+    <div class="srow" style="border-bottom:none"><span class="sl">Statut fertilité</span><span class="sv" id="su-stat">—</span></div>
+    <div class="hr"></div>
+    <div style="display:flex;align-items:flex-end;gap:9px">
+      <div style="flex:1"><label class="lbl">Rappel avant règles</label>
+        <select id="su-rem" class="inp">
+          <option value="0">Le jour même</option><option value="1">1 jour avant</option>
+          <option value="2">2 jours avant</option><option value="3">3 jours avant</option>
+        </select>
+      </div>
+      <button class="btn btn-sg btn-sm" onclick="setReminder()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Rappel
+      </button>
+    </div>
+    <p id="su-rem-txt" style="font-size:12px;margin-top:7px;color:var(--mu)">Aucun rappel défini</p>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div>
+  <!-- Calendar -->
+  <div class="card">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:11px;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:9px;background:var(--rs-bg);color:var(--rs);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3 style="font-size:16px">Calendrier</h3>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <button class="btn btn-g btn-sm btn-ico" onclick="calPrev()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span id="cal-m" style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;min-width:150px;text-align:center"></span>
+        <button class="btn btn-g btn-sm btn-ico" onclick="calNext()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <button class="btn btn-g btn-sm" onclick="calToday()">Auj.</button>
+      </div>
+    </div>
+    <div class="cal-g" style="margin-bottom:5px">
+      <div class="cal-h">D</div><div class="cal-h">L</div><div class="cal-h">M</div>
+      <div class="cal-h">M</div><div class="cal-h">J</div><div class="cal-h">V</div><div class="cal-h">S</div>
+    </div>
+    <div class="cal-g" id="cal-grid"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:13px;margin-top:14px;padding-top:13px;border-top:1px solid var(--bd)">
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)"><span class="dot dp" style="width:8px;height:8px"></span>Règles</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)"><span class="dot do" style="width:8px;height:8px"></span>Ovulation</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)"><span class="dot df" style="width:8px;height:8px"></span>Fertiles</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)"><span class="dot de" style="width:8px;height:8px"></span>Entrée</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)"><span style="width:8px;height:8px;border-radius:50%;border:2px solid var(--rs);display:inline-block"></span>Aujourd'hui</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card mb">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--gd-bg);color:var(--gd);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <h3 style="font-size:16px">Statistiques</h3>
+    </div>
+    <div id="stat-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-bottom:18px">
+      <div class="card card-sm" style="text-align:center;border-color:rgba(176,91,114,.15)"><div class="stat-n" id="st-avg">28</div><div style="font-size:12px;color:var(--tx2);margin-top:3px">Cycle moy. (j)</div></div>
+      <div class="card card-sm" style="text-align:center;border-color:rgba(184,137,58,.15)"><div class="stat-n" id="st-reg">—</div><div style="font-size:12px;color:var(--tx2);margin-top:3px">Régularité</div></div>
+      <div class="card card-sm" style="text-align:center;border-color:rgba(77,124,111,.15)"><div class="stat-n" id="st-cnt">0</div><div style="font-size:12px;color:var(--tx2);margin-top:3px">Cycles complets</div></div>
+      <div class="card card-sm" style="text-align:center;border-color:rgba(99,102,241,.15)"><div class="stat-n" id="st-sym">0</div><div style="font-size:12px;color:var(--tx2);margin-top:3px">Symptômes notés</div></div>
+    </div>
+    <div class="sec-t">Symptômes fréquents</div>
+    <div id="sym-stats"><p style="font-size:13px;color:var(--mu);padding:8px 0;text-align:center">Enregistrez des symptômes pour voir les tendances.</p></div>
+    <div class="sec-t">Historique des cycles</div>
+    <div id="cyc-hist" style="max-height:185px;overflow-y:auto"><p style="font-size:13px;color:var(--mu);padding:8px 0;text-align:center">Aucun cycle complet enregistré.</p></div>
+  </div>
+
+  <!-- Knowledge -->
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--sg-bg);color:var(--sg);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <h3 style="font-size:16px">Guide clinique du cycle</h3>
+    </div>
+    <div id="knowledge"></div>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- ══════════════════ PAGE: MON INTIMITÉ ══════════════════ -->
+<div id="p-int" class="page">
+<div class="wrap pg-body">
+
+  <!-- LOCK SCREEN -->
+  <div id="lock-screen">
+    <div class="lock-scr">
+      <div class="lock-ico" id="lock-ico">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2 style="font-size:25px;margin-top:2px" id="lock-title">Mon Intimité</h2>
+      <p style="font-size:14px;color:var(--tx2);margin-top:6px;max-width:270px" id="lock-sub">Entrez votre code confidentiel à 4 chiffres.</p>
+      <div class="pdots" id="pdots">
+        <div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div>
+        <div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div>
+      </div>
+      <div class="pgrid">
+        <button class="pkey" onclick="P.press('1')">1</button><button class="pkey" onclick="P.press('2')">2</button><button class="pkey" onclick="P.press('3')">3</button>
+        <button class="pkey" onclick="P.press('4')">4</button><button class="pkey" onclick="P.press('5')">5</button><button class="pkey" onclick="P.press('6')">6</button>
+        <button class="pkey" onclick="P.press('7')">7</button><button class="pkey" onclick="P.press('8')">8</button><button class="pkey" onclick="P.press('9')">9</button>
+        <button class="pkey pkey-0" onclick="P.press('0')">0</button>
+        <button class="pkey pkey-del" onclick="P.del()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+        </button>
+      </div>
+      <div class="perr" id="perr"></div>
+      <p style="font-size:12px;color:var(--mu);margin-top:12px;max-width:250px;line-height:1.7" id="phint"></p>
+    </div>
+  </div>
+
+  <!-- CONTENT (unlocked) -->
+  <div id="int-body" style="display:none">
+
+    <!-- ── LIST VIEW ── -->
+    <div id="int-list">
+      <!-- Fertility banner -->
+      <div id="banner" class="sbanner sb-gy" style="margin-bottom:18px">
+        <div id="banner-ico" style="width:40px;height:40px;border-radius:11px;background:var(--bg2);color:var(--mu);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:3px" id="banner-title">Statut du jour</div>
+          <p style="font-size:13px;color:var(--tx2)" id="banner-desc">Configurez votre cycle dans Mon Cycle.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px" id="banner-badges"></div>
+        </div>
+      </div>
+
+      <div class="sec-t">Mes partenaires</div>
+      <div class="pc-grid" id="pc-grid"></div>
+
+      <!-- Weekly recap appears here -->
+      <div id="weekly-recap" style="margin-top:22px"></div>
+
+      <!-- Privacy -->
+      <div class="privacy-box">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;color:var(--sg)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style="font-size:13px;font-weight:600">Confidentialité &amp; Sécurité</span>
+        </div>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:11px;line-height:1.7">Données chiffrées via <strong>AES-GCM 256 bits</strong> (Web Crypto API). Rien ne quitte votre appareil.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          <button class="btn btn-g btn-sm" onclick="INT.changePin()">Changer le code</button>
+          <button class="btn btn-g btn-sm" onclick="INT.lock()">Verrouiller</button>
+          <button class="btn btn-d btn-sm" onclick="INT.deleteAll()">Effacer données intimes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DETAIL VIEW (partner profile) ── -->
+    <div id="int-detail" style="display:none">
+      <div class="detail-hdr">
+        <button class="btn btn-g btn-sm" onclick="INT.backToList()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Retour
+        </button>
+        <div class="pav" style="width:44px;height:44px;border-radius:12px">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px" id="det-name">—</div>
+          <div style="font-size:13px;color:var(--mu)" id="det-desc"></div>
+        </div>
+        <button class="btn btn-d btn-sm" id="det-del-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          Supprimer le profil
+        </button>
+      </div>
+
+      <!-- Risk today -->
+      <div id="det-today" style="margin-bottom:18px"></div>
+
+      <!-- Add relation form — inside partner profile -->
+      <div class="card" style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
+          <div style="width:30px;height:30px;border-radius:8px;background:var(--rs-bg);color:var(--rs);display:flex;align-items:center;justify-content:center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <span style="font-weight:600;font-size:14px">Enregistrer une relation</span>
+        </div>
+        <div class="grid2">
+          <div class="fld"><label class="lbl">Date</label><input type="date" id="rel-date" class="inp"/></div>
+          <div class="fld"><label class="lbl">Contraception</label>
+            <select id="rel-prot" class="inp">
+              <option value="none">Aucune</option>
+              <option value="condom">Préservatif masculin</option>
+              <option value="fcondom">Préservatif féminin</option>
+              <option value="pill">Pilule œstroprogestative</option>
+              <option value="minipill">Microprogestative</option>
+              <option value="iud">DIU (Stérilet)</option>
+              <option value="implant">Implant sous-cutané</option>
+              <option value="patch">Patch contraceptif</option>
+              <option value="ring">Anneau vaginal</option>
+              <option value="other">Autre méthode</option>
+            </select>
+          </div>
+        </div>
+        <div class="fld"><label class="lbl">Note privée</label><input type="text" id="rel-note" class="inp" placeholder="Optionnel…"/></div>
+        <div id="rel-preview" style="min-height:38px;margin-bottom:13px"></div>
+        <button class="btn btn-p w100" id="rel-save">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Enregistrer
+        </button>
+      </div>
+
+      <div class="sec-t">Historique des relations</div>
+      <div id="det-rels" style="max-height:480px;overflow-y:auto"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- Day modal -->
+<div class="modal-bg" id="m-day">
+  <div class="modal-box" style="max-width:530px">
+    <div class="m-hd">
+      <h3 class="m-title" id="m-day-title">Détails du jour</h3>
+      <button class="m-x" onclick="closeModal('m-day')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="m-day-body"></div>
+  </div>
+</div>
+
+<!-- Add partner modal -->
+<div class="modal-bg" id="m-partner">
+  <div class="modal-box" style="max-width:420px">
+    <div class="m-hd">
+      <h3 class="m-title" id="m-p-title">Nouveau partenaire</h3>
+      <button class="m-x" onclick="closeModal('m-partner')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="m-p-body"></div>
+  </div>
+</div>
+
+<!-- Export modal -->
+<div class="modal-bg" id="m-export">
+  <div class="modal-box" style="max-width:360px">
+    <div class="m-hd">
+      <h3 class="m-title">Exporter les données</h3>
+      <button class="m-x" onclick="closeModal('m-export')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-s w100" onclick="doCSV();closeModal('m-export')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Exporter en CSV</button>
+      <button class="btn btn-s w100" onclick="doJSON();closeModal('m-export')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Exporter en JSON</button>
+      <button class="btn btn-p w100" onclick="doReport();closeModal('m-export')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Rapport médical</button>
+    </div>
+  </div>
+</div>
+
+<div style="padding:18px;text-align:center">
+  <p style="font-size:12px;color:var(--mu)">MonCycle · Suivi du cycle menstruel · Données stockées localement<br>Cet outil ne remplace pas un avis médical professionnel.</p>
+</div>
+
+<style>
+@media(max-width:600px){.hide-sm{display:none}}
+</style>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════
+const MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const SYMS={cramps:'Crampes pelviennes',headache:'Céphalées',tender_breasts:'Tension mammaire',bloating:'Ballonnements',acne:'Acné',fatigue:'Fatigue',nausea:'Nausées',back_pain:'Lombalgies',period_start:'Début des règles',spotting:'Spotting',discharge:'Leucorrhées',mood_swings:'Labilité émotionnelle'};
+const MOODS={serene:'Sereine',happy:'Joyeuse',neutral:'Neutre',sad:'Triste',anxious:'Anxieuse',irritable:'Irritable',tired:'Fatiguée',energetic:'Énergique'};
+const INTS={mild:'Légère',moderate:'Modérée',severe:'Forte'};
+const PROTS={none:'Aucune contraception',condom:'Préservatif masculin',fcondom:'Préservatif féminin',pill:'Pilule œstroprogestative',minipill:'Microprogestative',iud:'DIU (Stérilet)',implant:'Implant sous-cutané',patch:'Patch contraceptif',ring:'Anneau vaginal',other:'Autre méthode'};
+const SK={S:'mc4_s',E:'mc4_e',T:'mc4_t',R:'mc4_r'};
+const IK={P:'mc4_ip',D:'mc4_id'};
+const KDOC=[
+  {name:'Phase menstruelle',col:'var(--rs)',desc:'Desquamation de l\'endomètre. Œstrogènes et progestérone au nadir. Crampes, lombalgies, fatigue fréquents.',tip:'Repos, antalgiques (paracétamol, ibuprofène). Chaleur locale.'},
+  {name:'Phase folliculaire',col:'#6366f1',desc:'FSH stimule la croissance folliculaire. Montée des œstrogènes. Énergie et humeur améliorées. Glaire cervicale opaque.',tip:'Période favorable à l\'activité physique. Fertilité faible en début de phase.'},
+  {name:'Ovulation',col:'var(--sg)',desc:'Pic de LH. Libération de l\'ovocyte. Température +0,2–0,5°C. Glaire filante. Fertilité maximale.',tip:'Ovocyte viable 12–24h. Spermatozoïdes viables 3–5 jours.'},
+  {name:'Phase lutéale',col:'var(--gd)',desc:'Corps jaune, progestérone dominante. SPM possible : tension mammaire, ballonnements, irritabilité.',tip:'Réduire sel et caféine. Risque de grossesse faible mais non nul.'},
+];
+
+// ════════════════════════════════════════════════
+// APP STATE
+// ════════════════════════════════════════════════
+const A={
+  settings:{lastPeriodStart:null,cycleLength:28,periodLength:5,temperature:null,reminderDays:0},
+  entries:[],viewDate:new Date(),theme:'light'
+};
+
+// ════════════════════════════════════════════════
+// DATE UTILITIES — local time only, no UTC
+// ════════════════════════════════════════════════
+function ld(d){
+  if(!d)return null;
+  if(d instanceof Date)return new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,0,0,0);
+  const[y,m,dd]=String(d).split('-').map(Number);
+  return new Date(y,m-1,dd,0,0,0,0);
+}
+function fd(d){
+  const dt=d instanceof Date?d:ld(d);
+  if(!dt)return'';
+  return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+function fdd(ds){const d=ld(ds);if(!d)return'';return d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})}
+function fdl(ds){const d=ld(ds);if(!d)return'';return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+function ad(d,n){const r=ld(d);r.setDate(r.getDate()+n);return r}
+function diff(a,b){return Math.round((ld(b)-ld(a))/86400000)}
+function today(){return fd(new Date())}
+
+// ════════════════════════════════════════════════
+// XSS PROTECTION
+// ════════════════════════════════════════════════
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+const TICO={ok:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',err:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',inf:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',wrn:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};
+function toast(msg,type='ok',dur=3200){
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<span class="t-${type}">${TICO[type]||TICO.inf}</span><span>${esc(msg)}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),230)},dur);
+}
+
+// ════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')})});
+
+// ════════════════════════════════════════════════
+// THEME — toggles class on body
+// ════════════════════════════════════════════════
+function applyTheme(t){
+  document.body.classList.toggle('dark',t==='dark');
+  document.getElementById('ico-sun').style.display=t==='dark'?'':'none';
+  document.getElementById('ico-moon').style.display=t==='dark'?'none':'';
+}
+function toggleTheme(){
+  A.theme=A.theme==='light'?'dark':'light';
+  applyTheme(A.theme);
+  localStorage.setItem(SK.T,A.theme);
+}
+
+// ════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ════════════════════════════════════════════════
+function goPage(p){
+  document.getElementById('p-cycle').classList.toggle('on',p==='cycle');
+  document.getElementById('p-int').classList.toggle('on',p==='int');
+  document.getElementById('t-cycle').classList.toggle('on',p==='cycle');
+  document.getElementById('t-int').classList.toggle('on',p==='int');
+  if(p==='int'){
+    if(INT.unlocked)INT.showContent();
+    else P.init(!!localStorage.getItem(IK.P));
+  }
+}
+
+// ════════════════════════════════════════════════
+// STORAGE
+// ════════════════════════════════════════════════
+function loadApp(){
+  try{const s=localStorage.getItem(SK.S);if(s)Object.assign(A.settings,JSON.parse(s))}catch{}
+  try{const e=localStorage.getItem(SK.E);if(e)A.entries=JSON.parse(e)}catch{}
+  try{const t=localStorage.getItem(SK.T);if(t)A.theme=t}catch{}
+  try{const r=localStorage.getItem(SK.R);if(r)A.settings.reminderDays=JSON.parse(r).days||0}catch{}
+}
+function saveApp(){
+  localStorage.setItem(SK.S,JSON.stringify(A.settings));
+  localStorage.setItem(SK.E,JSON.stringify(A.entries));
+  localStorage.setItem(SK.T,A.theme);
+}
+function syncForm(){
+  document.getElementById('s-last').value=A.settings.lastPeriodStart||'';
+  document.getElementById('s-cycle').value=A.settings.cycleLength;
+  document.getElementById('s-period').value=A.settings.periodLength;
+  document.getElementById('s-temp').value=A.settings.temperature||'';
+  document.getElementById('su-rem').value=A.settings.reminderDays||0;
+}
+
+// ════════════════════════════════════════════════
+// MEDICAL ENGINE — Knaus-Ogino + LH peak model
+// Ovulation = cycleLength - 14 (standard gyn.)
+// Fertile: J(ovul-5) → J(ovul+1)
+// ════════════════════════════════════════════════
+function ovDay(cl){return cl-14}
+
+function getDayN(ds,s){
+  if(!s.lastPeriodStart)return null;
+  const base=ld(s.lastPeriodStart),tgt=ld(ds);
+  if(!tgt||tgt<base)return null;
+  return(diff(fd(base),ds)%s.cycleLength)+1;
+}
+
+function analyse(ds,s){
+  const U={level:'unknown',risk:'unknown',phase:'Non configuré',day:null,label:'Cycle non configuré',desc:'Configurez votre date de dernier cycle.',detail:''};
+  if(!s.lastPeriodStart)return U;
+  const n=getDayN(ds,s);
+  if(!n)return{...U,phase:'Avant le cycle',label:'Avant le début du cycle',desc:'',detail:''};
+  const{cycleLength:cl,periodLength:pl}=s;
+  const ov=ovDay(cl),fs=ov-5,fe=ov+1;
+  if(n>=1&&n<=pl)return{level:'menstrual',risk:'low',phase:'Phase menstruelle',day:n,label:`Phase menstruelle — J${n}/${cl}`,desc:'Desquamation de l\'endomètre. Risque de grossesse très faible.',detail:'Probabilité de conception <2% en phase menstruelle.'};
+  if(n>pl&&n<fs)return{level:'follicular',risk:'low',phase:'Phase folliculaire',day:n,label:`Phase folliculaire — J${n}/${cl}`,desc:`Fenêtre fertile dans ${fs-n} jour(s). Risque faible.`,detail:'Maturation folliculaire. Œstrogènes en hausse progressive.'};
+  if(n>=fs&&n<ov)return{level:'fertile',risk:'high',phase:'Fenêtre fertile',day:n,label:`Fenêtre fertile — J${n}/${cl}`,desc:`Ovulation dans ${ov-n} jour(s). Risque de grossesse ÉLEVÉ.`,detail:'Les spermatozoïdes survivent jusqu\'à 5 jours. Probabilité ≈20–30%.'};
+  if(n===ov)return{level:'ovulation',risk:'high',phase:'Ovulation',day:n,label:`Ovulation — J${n}/${cl}`,desc:'Libération de l\'ovocyte. Fertilité MAXIMALE.',detail:'Pic de LH. Ovocyte viable 12–24h. Probabilité ≈30%. Température +0,2–0,5°C.'};
+  if(n===fe)return{level:'postovul',risk:'medium',phase:'Post-ovulation',day:n,label:`Post-ovulation — J${n}/${cl}`,desc:'Lendemain de l\'ovulation. Risque en baisse, non nul.',detail:'Ovocyte non viable. Corps jaune en formation.'};
+  return{level:'luteal',risk:'low',phase:'Phase lutéale',day:n,label:`Phase lutéale — J${n}/${cl}`,desc:'Progestérone dominante. Risque faible.',detail:`Corps jaune actif jusqu'à J${cl}.`};
+}
+
+function nextDates(s){
+  if(!s.lastPeriodStart)return null;
+  const tday=ld(new Date());
+  let cs=ld(s.lastPeriodStart);
+  while(ad(cs,s.cycleLength-1)<tday)cs=ad(cs,s.cycleLength);
+  const ov=ad(cs,ovDay(s.cycleLength)-1);
+  if(ov<tday){const nc=ad(cs,s.cycleLength),no=ad(nc,ovDay(s.cycleLength)-1);return{nextPeriod:ad(nc,s.cycleLength),ovulation:no,fertileStart:ad(no,-5),fertileEnd:ad(no,1)}}
+  return{nextPeriod:ad(cs,s.cycleLength),ovulation:ov,fertileStart:ad(ov,-5),fertileEnd:ad(ov,1)};
+}
+
+function calZone(ds,s){
+  if(!s.lastPeriodStart)return[];
+  const n=getDayN(ds,s);if(!n)return[];
+  const ov=ovDay(s.cycleLength),fs=ov-5,fe=ov+1;
+  if(n>=1&&n<=s.periodLength)return['period'];
+  if(n===ov)return['ovul'];
+  if(n>=fs&&n<=fe)return['fertile'];
+  return[];
+}
+
+// ════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════
+function saveSettings(){
+  const lps=document.getElementById('s-last').value;
+  const cl=parseInt(document.getElementById('s-cycle').value)||28;
+  const pl=parseInt(document.getElementById('s-period').value)||5;
+  const tv=document.getElementById('s-temp').value;
+  if(cl<20||cl>45){toast('Durée du cycle : 20–45 jours','err');return}
+  if(pl<1||pl>10){toast('Durée des règles : 1–10 jours','err');return}
+  A.settings.lastPeriodStart=lps||null;A.settings.cycleLength=cl;A.settings.periodLength=pl;A.settings.temperature=tv?parseFloat(tv):null;
+  saveApp();renderCal();updateSum();updateStats();renderKnow();
+  toast('Paramètres enregistrés');
+}
+
+// ════════════════════════════════════════════════
+// CHIPS (symptom selector)
+// ════════════════════════════════════════════════
+function buildChips(cid,cls){
+  const c=document.getElementById(cid);if(!c)return;
+  c.innerHTML=Object.entries(SYMS).map(([v,l])=>`
+    <label class="chip" data-v="${v}">
+      <input type="checkbox" class="${cls}" value="${v}" style="display:none"/>
+      <span class="chip-ck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg></span>
+      <span>${l}</span>
+    </label>`).join('');
+  c.querySelectorAll('.chip').forEach(chip=>{
+    const cb=chip.querySelector('input'),sv=chip.querySelector('.chip-ck svg');
+    chip.addEventListener('click',()=>{cb.checked=!cb.checked;chip.classList.toggle('on',cb.checked);if(sv)sv.style.display=cb.checked?'':'none'});
+    cb.addEventListener('click',e=>e.stopPropagation());
+  });
+}
+function getChecked(cls){return Array.from(document.querySelectorAll(`.${cls}:checked`)).map(i=>i.value)}
+function resetChips(cls){
+  document.querySelectorAll(`.${cls}`).forEach(cb=>{
+    cb.checked=false;
+    const chip=cb.closest('.chip');
+    if(chip){chip.classList.remove('on');const sv=chip.querySelector('.chip-ck svg');if(sv)sv.style.display='none'}
+  });
+}
+
+// ════════════════════════════════════════════════
+// SAVE ENTRY
+// ════════════════════════════════════════════════
+function saveEntry(){
+  const date=document.getElementById('e-date').value;
+  if(!date){toast('Sélectionnez une date','err');return}
+  A.entries.push({date,symptoms:getChecked('sym-chip'),otherSymptoms:document.getElementById('e-other').value.trim(),mood:document.getElementById('e-mood').value,intensity:document.getElementById('e-intensity').value,notes:document.getElementById('e-notes').value.trim(),timestamp:new Date().toISOString()});
+  saveApp();
+  resetChips('sym-chip');
+  ['e-other','e-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('e-mood').value='neutral';document.getElementById('e-intensity').value='moderate';
+  renderCal();updateStats();updateSum();toast('Entrée enregistrée');
+}
+
+function deleteEntry(ts){
+  if(!confirm('Supprimer cette entrée ?'))return;
+  A.entries=A.entries.filter(e=>e.timestamp!==ts);
+  saveApp();renderCal();updateStats();updateSum();closeModal('m-day');toast('Entrée supprimée','inf');
+}
+
+// ════════════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════════════
+function renderCal(){
+  const y=A.viewDate.getFullYear(),mo=A.viewDate.getMonth();
+  document.getElementById('cal-m').textContent=`${MONTHS[mo]} ${y}`;
+  const todS=today(),g=document.getElementById('cal-grid');g.innerHTML='';
+  const fdow=new Date(y,mo,1).getDay(),days=new Date(y,mo+1,0).getDate();
+  for(let i=0;i<fdow;i++){const el=document.createElement('div');el.className='cal-d empty';g.appendChild(el)}
+  for(let d=1;d<=days;d++){
+    const ds=fd(new Date(y,mo,d)),el=document.createElement('div');el.className='cal-d';
+    calZone(ds,A.settings).forEach(c=>el.classList.add(c));
+    if(ds===todS)el.classList.add('today');
+    const num=document.createElement('div');num.className='cal-dn';num.textContent=d;el.appendChild(num);
+    const dots=document.createElement('div');dots.className='cdots';
+    const z=calZone(ds,A.settings);
+    if(z.includes('period'))dots.innerHTML+='<span class="dot dp"></span>';
+    if(z.includes('ovul'))dots.innerHTML+='<span class="dot do"></span>';
+    if(z.includes('fertile'))dots.innerHTML+='<span class="dot df"></span>';
+    if(A.entries.some(e=>e.date===ds))dots.innerHTML+='<span class="dot de"></span>';
+    el.appendChild(dots);
+    const ents=A.entries.filter(e=>e.date===ds);
+    el.addEventListener('click',()=>openDayModal(ds,ents));
+    g.appendChild(el);
+  }
+}
+function calPrev(){A.viewDate=new Date(A.viewDate.getFullYear(),A.viewDate.getMonth()-1,1);renderCal()}
+function calNext(){A.viewDate=new Date(A.viewDate.getFullYear(),A.viewDate.getMonth()+1,1);renderCal()}
+function calToday(){A.viewDate=new Date();renderCal()}
+
+// ════════════════════════════════════════════════
+// DAY MODAL
+// ════════════════════════════════════════════════
+function riskCls(r){return{high:'rk-r',medium:'rk-o',low:'rk-g',unknown:'rk-gy'}[r]||'rk-gy'}
+
+function openDayModal(ds,ents){
+  document.getElementById('m-day-title').textContent=fdl(ds);
+  const fa=analyse(ds,A.settings);
+  let html=`<div class="kn-item" style="margin-bottom:14px;border-color:rgba(176,91,114,.12)">
+    <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:6px">Analyse de fertilité</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px">${esc(fa.phase)} — Jour ${fa.day||'?'}/${A.settings.cycleLength}</div>
+      <p style="font-size:13px;color:var(--tx2);margin-bottom:8px">${esc(fa.desc)}</p>
+      <span class="risk ${riskCls(fa.risk)}">${esc(fa.label)}</span>
+      ${fa.detail?`<p style="font-size:12px;color:var(--mu);margin-top:7px">${esc(fa.detail)}</p>`:''}
+    </div>
+  </div>`;
+  if(ents.length){
+    html+=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:10px">Entrées enregistrées</div>`;
+    ents.forEach(e=>{
+      html+=`<div class="kn-item" style="margin-bottom:10px;cursor:default;display:block">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+          <span style="font-weight:600;font-size:13px">${esc(MOODS[e.mood]||e.mood)}</span>
+          <button class="btn btn-d btn-sm" style="font-size:11px;padding:3px 9px" data-ts="${e.timestamp}">Supprimer</button>
+        </div>
+        ${e.symptoms&&e.symptoms.length?`<p style="font-size:13px;color:var(--tx2);margin-bottom:3px"><strong>Symptômes :</strong> ${e.symptoms.map(s=>SYMS[s]||s).join(', ')}</p>`:''}
+        ${e.otherSymptoms?`<p style="font-size:13px;color:var(--tx2);margin-bottom:3px"><strong>Autres :</strong> ${esc(e.otherSymptoms)}</p>`:''}
+        ${e.intensity?`<p style="font-size:13px;color:var(--tx2);margin-bottom:3px"><strong>Intensité :</strong> ${INTS[e.intensity]||e.intensity}</p>`:''}
+        ${e.notes?`<p style="font-size:13px;color:var(--tx2)">${esc(e.notes)}</p>`:''}
+      </div>`;
+    });
+  }
+  html+=`<div style="border-top:1px solid var(--bd);margin-top:14px;padding-top:14px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:11px">Ajouter une entrée</div>
+    <div style="margin-bottom:11px"><label class="lbl">Symptômes</label><div class="chips" id="mc-chips"></div></div>
+    <div class="grid2" style="margin-bottom:11px">
+      <div><label class="lbl">Humeur</label><select id="mc-mood" class="inp">${Object.entries(MOODS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
+      <div><label class="lbl">Intensité</label><select id="mc-int" class="inp">${Object.entries(INTS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
+    </div>
+    <div style="margin-bottom:11px"><label class="lbl">Notes</label><textarea id="mc-notes" class="inp" style="min-height:66px" placeholder="Observations…"></textarea></div>
+    <button class="btn btn-p w100" id="mc-save">Enregistrer l'entrée</button>
+  </div>`;
+  document.getElementById('m-day-body').innerHTML=html;
+  buildChips('mc-chips','mc-chip');
+  // Wire delete buttons via event delegation
+  document.getElementById('m-day-body').querySelectorAll('[data-ts]').forEach(btn=>{
+    btn.addEventListener('click',()=>deleteEntry(btn.dataset.ts));
+  });
+  document.getElementById('mc-save').addEventListener('click',()=>{
+    A.entries.push({date:ds,symptoms:getChecked('mc-chip'),otherSymptoms:'',mood:document.getElementById('mc-mood').value,intensity:document.getElementById('mc-int').value,notes:document.getElementById('mc-notes').value.trim(),timestamp:new Date().toISOString()});
+    saveApp();renderCal();updateStats();updateSum();closeModal('m-day');toast('Entrée enregistrée');
+  });
+  openModal('m-day');
+}
+
+// ════════════════════════════════════════════════
+// SUMMARY
+// ════════════════════════════════════════════════
+function phBadge(lv){return{menstrual:'b-rs',follicular:'b-gr',ovulation:'b-sg',luteal:'b-gd',fertile:'b-sg',postovul:'b-gd',unknown:'b-gy'}[lv]||'b-gy'}
+
+function updateSum(){
+  const s=A.settings;
+  if(!s.lastPeriodStart){['su-phase','su-day','su-next','su-ovul','su-fert','su-stat'].forEach(id=>document.getElementById(id).textContent='—');return}
+  const fa=analyse(today(),s),nd=nextDates(s);
+  document.getElementById('su-phase').innerHTML=`<span class="badge ${phBadge(fa.level)}">${esc(fa.phase)}</span>`;
+  document.getElementById('su-day').textContent=fa.day?`J${fa.day} / ${s.cycleLength}`:'—';
+  if(nd){
+    document.getElementById('su-next').textContent=fdd(fd(nd.nextPeriod));
+    document.getElementById('su-ovul').textContent=fdd(fd(nd.ovulation));
+    document.getElementById('su-fert').textContent=`${fdd(fd(nd.fertileStart))} → ${fdd(fd(nd.fertileEnd))}`;
+  }
+  document.getElementById('su-stat').innerHTML=`<span class="risk ${riskCls(fa.risk)}" style="padding:3px 10px;font-size:12px">${esc(fa.phase)}</span>`;
+}
+
+// ════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════
+function calcCycles(){
+  const starts=A.entries.filter(e=>e.symptoms&&e.symptoms.includes('period_start')).map(e=>ld(e.date)).sort((a,b)=>a-b);
+  if(starts.length<2)return null;
+  const cycles=[];
+  for(let i=1;i<starts.length;i++){const len=diff(fd(starts[i-1]),fd(starts[i]));if(len>=18&&len<=55)cycles.push({start:fd(starts[i-1]),end:fd(starts[i]),length:len})}
+  return cycles.length?cycles:null;
+}
+
+function updateStats(){
+  const cycles=calcCycles();let avg=A.settings.cycleLength,reg='—',cnt=0;
+  if(cycles&&cycles.length){
+    cnt=cycles.length;const lens=cycles.map(c=>c.length);avg=Math.round(lens.reduce((a,b)=>a+b,0)/lens.length);
+    const sd=Math.sqrt(lens.reduce((a,b)=>a+(b-avg)**2,0)/lens.length);
+    reg=sd<=2?'Régulier':sd<=4?'Stable':sd<=7?'Variable':'Irrégulier';
+  }
+  const symC=A.entries.reduce((c,e)=>c+(e.symptoms?e.symptoms.length:0),0);
+  document.getElementById('st-avg').textContent=avg;document.getElementById('st-reg').textContent=reg;
+  document.getElementById('st-cnt').textContent=cnt;document.getElementById('st-sym').textContent=symC;
+  const counts={};A.entries.forEach(e=>{(e.symptoms||[]).forEach(s=>{counts[s]=(counts[s]||0)+1})});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const sdiv=document.getElementById('sym-stats');
+  if(!sorted.length){sdiv.innerHTML='<p style="font-size:13px;color:var(--mu);padding:8px 0;text-align:center">Enregistrez des symptômes pour voir les tendances.</p>'}
+  else sdiv.innerHTML=sorted.map(([s,n])=>{const p=Math.round(n/A.entries.length*100);return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--tx2)">${esc(SYMS[s]||s)}</span><span style="font-weight:600">${p}%</span></div><div class="prog-tr"><div class="prog-fi" style="width:${p}%"></div></div></div>`}).join('');
+  const cdiv=document.getElementById('cyc-hist');
+  if(!cycles||!cycles.length)cdiv.innerHTML='<p style="font-size:13px;color:var(--mu);padding:8px 0;text-align:center">Aucun cycle complet enregistré.</p>';
+  else cdiv.innerHTML=cycles.slice(-6).reverse().map((c,i,arr)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)"><div><span style="font-size:13px;font-weight:600">Cycle ${arr.length-i}</span><span style="font-size:11px;color:var(--mu);margin-left:8px">${c.start} → ${c.end}</span></div><span class="badge ${c.length<24?'b-rs':c.length>35?'b-gd':'b-sg'}">${c.length}j</span></div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// KNOWLEDGE BASE
+// ════════════════════════════════════════════════
+function renderKnow(){
+  document.getElementById('knowledge').innerHTML=KDOC.map(k=>`
+    <div class="kn-item">
+      <div class="kn-bar" style="background:${k.col}"></div>
+      <div><div style="font-weight:600;font-size:13px;margin-bottom:3px">${k.name}</div>
+        <p style="font-size:13px;color:var(--tx2);margin-bottom:3px">${k.desc}</p>
+        <p style="font-size:12px;color:var(--mu);font-style:italic">${k.tip}</p>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// REMINDER
+// ════════════════════════════════════════════════
+function setReminder(){
+  const d=parseInt(document.getElementById('su-rem').value)||0;
+  A.settings.reminderDays=d;localStorage.setItem(SK.R,JSON.stringify({days:d}));
+  updateRemTxt();toast('Rappel configuré');
+}
+function updateRemTxt(){
+  const el=document.getElementById('su-rem-txt'),d=A.settings.reminderDays;
+  el.textContent=d>0?`Rappel actif : ${d} jour(s) avant les règles`:'Aucun rappel défini';
+  el.style.color=d>0?'var(--sg)':'var(--mu)';
+}
+function checkReminder(){
+  const{lastPeriodStart,cycleLength,reminderDays}=A.settings;if(!lastPeriodStart||!reminderDays)return;
+  const nd=nextDates(A.settings);if(!nd)return;
+  const rd=ad(nd.nextPeriod,-reminderDays);
+  if(fd(rd)===today()){
+    const msg=`Rappel : vos prochaines règles sont prévues le ${fdd(fd(nd.nextPeriod))}`;
+    if('Notification' in window&&Notification.permission==='granted')new Notification('MonCycle',{body:msg});
+    else toast(msg,'inf',6000);
+  }
+}
+
+// ════════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════════
+function dlBlob(c,mt,n){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:mt}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),200)}
+function doCSV(){
+  if(!A.entries.length){toast('Aucune donnée','wrn');return}
+  const rows=[['Date','Symptômes','Autres','Humeur','Intensité','Notes'],...A.entries.map(e=>[e.date,(e.symptoms||[]).map(s=>SYMS[s]||s).join('; '),e.otherSymptoms||'',MOODS[e.mood]||e.mood,INTS[e.intensity]||e.intensity,(e.notes||'').replace(/"/g,'""')])];
+  dlBlob('\ufeff'+rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`moncycle_${today()}.csv`);toast('Export CSV terminé');
+}
+function doJSON(){
+  if(!A.entries.length){toast('Aucune donnée','wrn');return}
+  dlBlob(JSON.stringify({exportedAt:new Date().toISOString(),settings:A.settings,entries:A.entries},null,2),'application/json',`moncycle_${today()}.json`);toast('Export JSON terminé');
+}
+function doReport(){
+  if(!A.entries.length){toast('Aucune donnée','wrn');return}
+  const cycles=calcCycles();const avg=cycles?Math.round(cycles.reduce((a,c)=>a+c.length,0)/cycles.length):A.settings.cycleLength;
+  const counts={};A.entries.forEach(e=>(e.symptoms||[]).forEach(s=>{counts[s]=(counts[s]||0)+1}));
+  const ss=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const html=`<div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:14px">Rapport généré le ${new Date().toLocaleDateString('fr-FR')} — À remettre à votre professionnel de santé.</p>
+    <div class="kn-item" style="margin-bottom:12px"><div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:8px">Informations générales</div>
+      <div class="grid2" style="font-size:13px;gap:8px">
+        <div><span style="color:var(--tx2)">Entrées</span><br><strong>${A.entries.length}</strong></div>
+        <div><span style="color:var(--tx2)">Cycle moyen</span><br><strong>${avg}j</strong></div>
+        <div><span style="color:var(--tx2)">Cycles enregistrés</span><br><strong>${cycles?cycles.length:0}</strong></div>
+        <div><span style="color:var(--tx2)">Dernier cycle</span><br><strong>${A.settings.lastPeriodStart||'—'}</strong></div>
+      </div></div></div>
+    ${cycles&&cycles.length?`<div class="kn-item" style="margin-bottom:12px;display:block"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:8px">Historique des cycles</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--bd)"><th style="padding:6px 0;text-align:left;font-weight:600">N°</th><th style="padding:6px;text-align:left;font-weight:600">Début</th><th style="padding:6px;text-align:left;font-weight:600">Fin</th><th style="padding:6px;text-align:right;font-weight:600">Durée</th></tr></thead>
+      <tbody>${cycles.map((c,i)=>`<tr style="border-bottom:1px solid var(--bd)"><td style="padding:6px 0;color:var(--mu)">${i+1}</td><td style="padding:6px">${c.start}</td><td style="padding:6px">${c.end}</td><td style="padding:6px;text-align:right"><strong>${c.length}j</strong></td></tr>`).join('')}</tbody></table></div>`:''}
+    ${ss.length?`<div class="kn-item" style="margin-bottom:12px;display:block"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:8px">Symptômes fréquents</div>
+      ${ss.slice(0,10).map(([s,n])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:13px"><span>${SYMS[s]||s}</span><span style="font-weight:600">${n}× (${Math.round(n/A.entries.length*100)}%)</span></div>`).join('')}</div>`:''}
+    <div class="kn-item" style="background:rgba(77,124,111,.06);border-color:rgba(77,124,111,.2);display:block;margin-bottom:14px"><p style="font-size:12px;color:var(--tx2);line-height:1.8"><strong>Note :</strong> Ce rapport est automatiquement généré. Il doit être interprété par un professionnel de santé. Il ne constitue pas un diagnostic médical.</p></div>
+    <button class="btn btn-p w100" onclick="printRep()">Imprimer</button></div>`;
+  document.getElementById('m-day-body').innerHTML=html;
+  document.getElementById('m-day-title').textContent='Rapport médical';
+  openModal('m-day');
+}
+function printRep(){
+  const w=window.open('','_blank','width=750,height=900');if(!w){toast('Autorisez les popups','wrn');return}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport MonCycle</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>body{font-family:'Outfit',sans-serif;padding:30px;max-width:700px;margin:0 auto;color:#1C1614}table{width:100%;border-collapse:collapse}th,td{padding:8px;text-align:left;border-bottom:1px solid #EAE0D8}.kn-item{border:1px solid #EAE0D8;border-radius:9px;padding:13px;margin-bottom:12px}.btn{display:none!important}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}</style>
+  </head><body>${document.getElementById('m-day-body').innerHTML}</body></html>`);
+  w.document.close();w.focus();setTimeout(()=>w.print(),600);
+}
+
+// ════════════════════════════════════════════════
+// CLEAR ALL
+// ════════════════════════════════════════════════
+function clearAll(){
+  if(!confirm('Supprimer TOUTES les données (cycle, entrées, paramètres) ?'))return;
+  A.entries=[];A.settings={lastPeriodStart:null,cycleLength:28,periodLength:5,temperature:null,reminderDays:0};
+  [SK.S,SK.E,SK.R].forEach(k=>localStorage.removeItem(k));
+  syncForm();renderCal();updateSum();updateStats();
+  document.getElementById('e-date').value=today();toast('Données effacées','inf');
+}
+
+// ════════════════════════════════════════════════════════
+//  MON INTIMITÉ
+// ════════════════════════════════════════════════════════
+
+// ── Crypto ──────────────────────────────────────────────
+const CR={
+  async hash(pin){const b=new TextEncoder().encode('mc4_v1_'+pin);const h=await crypto.subtle.digest('SHA-256',b);return btoa(String.fromCharCode(...new Uint8Array(h)))},
+  async key(pin){const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),{name:'PBKDF2'},false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:new TextEncoder().encode('mc4_pbkdf2_salt'),iterations:120000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])},
+  async enc(obj,pin){const k=await this.key(pin),iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(JSON.stringify(obj)));return JSON.stringify({iv:Array.from(iv),ct:Array.from(new Uint8Array(ct))})},
+  async dec(cipher,pin){try{const k=await this.key(pin);const{iv,ct}=JSON.parse(cipher);const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv)},k,new Uint8Array(ct));return JSON.parse(new TextDecoder().decode(pt))}catch{return null}}
+};
+
+// ── PIN ──────────────────────────────────────────────────
+const P={
+  buf:'',setting:false,pending:'',
+  init(hasPin){
+    this.buf='';this.setting=!hasPin;this.pending='';this.dots();
+    document.getElementById('lock-screen').style.display='';
+    document.getElementById('int-body').style.display='none';
+    document.getElementById('perr').textContent='';
+    if(!hasPin){
+      document.getElementById('lock-title').textContent='Créer votre code';
+      document.getElementById('lock-sub').textContent='Choisissez un code à 4 chiffres pour protéger cet espace.';
+      document.getElementById('phint').textContent='Ce code chiffre vos données. Notez-le en lieu sûr — il est irrécupérable.';
+    }else{
+      document.getElementById('lock-title').textContent='Mon Intimité';
+      document.getElementById('lock-sub').textContent='Entrez votre code confidentiel à 4 chiffres.';
+      document.getElementById('phint').textContent='';
+    }
+  },
+  press(d){if(this.buf.length>=4)return;this.buf+=d;this.dots();if(this.buf.length===4)setTimeout(()=>this.submit(),160)},
+  del(){this.buf=this.buf.slice(0,-1);this.dots()},
+  dots(){for(let i=0;i<4;i++)document.getElementById(`pd${i}`).classList.toggle('on',i<this.buf.length)},
+  async submit(){
+    const pin=this.buf;this.buf='';this.dots();
+    if(this.setting){
+      if(!this.pending){this.pending=pin;document.getElementById('lock-title').textContent='Confirmer le code';document.getElementById('lock-sub').textContent='Saisissez à nouveau le même code.';document.getElementById('perr').textContent='';return}
+      if(pin!==this.pending){document.getElementById('perr').textContent='Les codes ne correspondent pas. Recommencez.';this.pending='';document.getElementById('lock-title').textContent='Créer votre code';document.getElementById('lock-sub').textContent='Choisissez un code à 4 chiffres.';return}
+      const h=await CR.hash(pin);localStorage.setItem(IK.P,h);INT.pin=pin;INT.unlocked=true;this.setting=false;
+      await INT.load(pin);INT.showContent();toast('Code créé — espace sécurisé');return;
+    }
+    const h=await CR.hash(pin);
+    if(h===localStorage.getItem(IK.P)){INT.pin=pin;INT.unlocked=true;await INT.load(pin);INT.showContent()}
+    else{document.getElementById('perr').textContent='Code incorrect.';setTimeout(()=>document.getElementById('perr').textContent='',2000)}
+  }
+};
+
+// ── INT ──────────────────────────────────────────────────
+const INT={
+  unlocked:false,pin:'',partners:[],relations:[],activePid:null,
+
+  async load(pin){
+    const raw=localStorage.getItem(IK.D);if(!raw){this.partners=[];this.relations=[];return}
+    const d=await CR.dec(raw,pin);
+    if(d){this.partners=d.partners||[];this.relations=d.relations||[]}
+    else toast('Erreur de déchiffrement','err');
+  },
+  async save(){localStorage.setItem(IK.D,await CR.enc({partners:this.partners,relations:this.relations},this.pin))},
+
+  showContent(){
+    document.getElementById('lock-screen').style.display='none';
+    document.getElementById('int-body').style.display='';
+    this.showList();
+  },
+
+  showList(){
+    this.activePid=null;
+    document.getElementById('int-list').style.display='';
+    document.getElementById('int-detail').style.display='none';
+    this.renderBanner();this.renderPartners();this.renderWeekly();
+  },
+
+  backToList(){this.showList()},
+
+  renderBanner(){
+    const fa=analyse(today(),A.settings);
+    const banner=document.getElementById('banner');
+    const cls={high:'sb-r',medium:'sb-o',low:'sb-g',unknown:'sb-gy'};
+    banner.className=`sbanner ${cls[fa.risk]||'sb-gy'}`;
+    const ico=document.getElementById('banner-ico');
+    const icoBg={high:'var(--rd-bg)',medium:'var(--or-bg)',low:'var(--gr-bg)',unknown:'var(--bg2)'};
+    const icoCol={high:'var(--rd)',medium:'var(--or)',low:'var(--gr)',unknown:'var(--mu)'};
+    ico.style.background=icoBg[fa.risk]||icoBg.unknown;ico.style.color=icoCol[fa.risk]||icoCol.unknown;
+    document.getElementById('banner-title').textContent=fa.phase;
+    document.getElementById('banner-desc').textContent=fa.desc;
+    const bb=document.getElementById('banner-badges');
+    bb.innerHTML=`<span class="risk ${riskCls(fa.risk)}" style="font-size:12px;padding:4px 11px">${esc(fa.label)}</span>`;
+    if(fa.day)bb.innerHTML+=`<span class="badge b-gy" style="font-size:11px">J${fa.day}/${A.settings.cycleLength}</span>`;
+  },
+
+  renderPartners(){
+    const g=document.getElementById('pc-grid');
+    let html=this.partners.map(p=>{
+      const rels=this.relations.filter(r=>r.partnerId===p.id);
+      const last=rels.sort((a,b)=>b.date.localeCompare(a.date))[0];
+      const red=rels.filter(r=>r.risk==='high').length;
+      return`<div class="pc" data-pid="${p.id}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px">
+          <div class="pav"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <button class="btn btn-d btn-sm btn-ico del-p" data-pid="${p.id}" title="Supprimer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          </button>
+        </div>
+        <div style="font-weight:600;font-size:15px;margin-bottom:2px">${esc(p.name)}</div>
+        ${p.desc?`<div style="font-size:12px;color:var(--mu);margin-bottom:9px">${esc(p.desc)}</div>`:'<div style="margin-bottom:9px;height:13px"></div>'}
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          <span class="badge b-gy">${rels.length} relation(s)</span>
+          ${last?`<span class="badge b-sg" style="font-size:10px">Dernier : ${fdd(last.date)}</span>`:''}
+          ${red?`<span class="badge b-rd" style="font-size:10px">${red}× zone rouge</span>`:''}
+        </div>
+        <button class="btn btn-g w100 open-p" data-pid="${p.id}" style="margin-top:11px;font-size:12px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ouvrir le profil
+        </button>
+      </div>`;
+    }).join('');
+    html+=`<div class="pc-add" id="add-p-btn">
+      <div class="pav" style="width:46px;height:46px;border-radius:13px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </div>
+      <span style="font-size:13px;font-weight:500">Ajouter un partenaire</span>
+    </div>`;
+    g.innerHTML=html;
+    // EVENT DELEGATION — fixes all delete & open bugs
+    g.querySelectorAll('.open-p').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();INT.openPartner(btn.dataset.pid)}));
+    g.querySelectorAll('.del-p').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();INT.deletePartner(btn.dataset.pid)}));
+    g.querySelectorAll('.pc[data-pid]').forEach(card=>card.addEventListener('click',()=>INT.openPartner(card.dataset.pid)));
+    document.getElementById('add-p-btn').addEventListener('click',()=>INT.addPartnerModal());
+  },
+
+  openPartner(pid){
+    const p=this.partners.find(x=>x.id===pid);if(!p)return;
+    this.activePid=pid;
+    document.getElementById('int-list').style.display='none';
+    document.getElementById('int-detail').style.display='';
+    document.getElementById('det-name').textContent=p.name;
+    document.getElementById('det-desc').textContent=p.desc||'';
+    // Risk today
+    const fa=analyse(today(),A.settings);
+    const cls={high:'sb-r',medium:'sb-o',low:'sb-g',unknown:'sb-gy'};
+    document.getElementById('det-today').innerHTML=`
+      <div class="sbanner ${cls[fa.risk]||'sb-gy'}">
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:3px">Statut de fertilité aujourd'hui</div>
+          <p style="font-size:13px;color:var(--tx2);margin-bottom:7px">${esc(fa.desc)}</p>
+          <span class="risk ${riskCls(fa.risk)}" style="font-size:12px;padding:4px 11px">${esc(fa.label)}</span>
+          ${fa.detail?`<p style="font-size:12px;color:var(--mu);margin-top:6px">${esc(fa.detail)}</p>`:''}
+        </div>
+      </div>`;
+    // Wire delete profile button (using ID, no inline onclick)
+    const delBtn=document.getElementById('det-del-btn');
+    delBtn.onclick=null;
+    delBtn.addEventListener('click',()=>INT.deletePartner(pid),{once:true});
+    // Set form defaults
+    document.getElementById('rel-date').value=today();
+    document.getElementById('rel-prot').value='none';
+    document.getElementById('rel-note').value='';
+    this.updateRelPreview();
+    // Wire form
+    document.getElementById('rel-date').onchange=()=>INT.updateRelPreview();
+    document.getElementById('rel-save').onclick=null;
+    document.getElementById('rel-save').addEventListener('click',()=>INT.saveRel(),{once:false});
+    this.renderDetRels();
+  },
+
+  updateRelPreview(){
+    const ds=document.getElementById('rel-date').value;
+    const div=document.getElementById('rel-preview');
+    if(!ds){div.innerHTML='';return}
+    const fa=analyse(ds,A.settings);
+    div.innerHTML=`<span class="risk ${riskCls(fa.risk)}">${esc(fa.label)}</span>${fa.detail?`<p style="font-size:12px;color:var(--mu);margin-top:5px">${esc(fa.detail)}</p>`:''}`;
+  },
+
+  renderDetRels(){
+    const div=document.getElementById('det-rels');
+    const rels=this.relations.filter(r=>r.partnerId===this.activePid).sort((a,b)=>b.date.localeCompare(a.date));
+    if(!rels.length){div.innerHTML='<p style="font-size:13px;color:var(--mu);padding:10px 0;text-align:center">Aucune relation enregistrée.</p>';return}
+    div.innerHTML=rels.map(r=>`
+      <div class="rlog" data-rid="${r.id}">
+        <div style="flex:1;min-width:0">
+          <div class="rlog-date">${fdd(r.date)}</div>
+          <div style="font-size:13px;color:var(--tx2)">${esc(PROTS[r.protection]||r.protection)}${r.note?' · '+esc(r.note):''}</div>
+        </div>
+        <span class="risk ${riskCls(r.risk)}" style="font-size:11px;padding:3px 8px;white-space:nowrap">${esc(r.phase||'')}</span>
+        <button class="btn btn-d btn-sm btn-ico del-r" data-rid="${r.id}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        </button>
+      </div>`).join('');
+    // Wire delete rel buttons — event delegation
+    div.querySelectorAll('.del-r').forEach(btn=>{
+      btn.addEventListener('click',()=>INT.deleteRel(btn.dataset.rid));
+    });
+  },
+
+  async saveRel(){
+    const pid=this.activePid;if(!pid)return;
+    const date=document.getElementById('rel-date').value;
+    if(!date){toast('Sélectionnez une date','err');return}
+    const fa=analyse(date,A.settings);
+    this.relations.push({id:'r_'+Date.now(),partnerId:pid,date,protection:document.getElementById('rel-prot').value,note:document.getElementById('rel-note').value.trim(),risk:fa.risk,phase:fa.phase,timestamp:new Date().toISOString()});
+    await this.save();
+    document.getElementById('rel-date').value=today();document.getElementById('rel-prot').value='none';document.getElementById('rel-note').value='';
+    this.updateRelPreview();this.renderDetRels();this.renderPartners();this.renderWeekly();
+    toast('Relation enregistrée');
+  },
+
+  async deleteRel(rid){
+    if(!confirm('Supprimer cette relation ?'))return;
+    this.relations=this.relations.filter(r=>r.id!==rid);
+    await this.save();this.renderDetRels();this.renderPartners();this.renderWeekly();
+    toast('Supprimée','inf');
+  },
+
+  addPartnerModal(){
+    document.getElementById('m-p-title').textContent='Nouveau partenaire';
+    document.getElementById('m-p-body').innerHTML=`
+      <div class="fld"><label class="lbl">Prénom ou surnom *</label><input type="text" id="mp-name" class="inp" placeholder="Ex : Mon Chéri, Alexandre…"/></div>
+      <div class="fld"><label class="lbl">Description (optionnel)</label><input type="text" id="mp-desc" class="inp" placeholder="Ex : Fiancé, Partenaire régulier…"/></div>
+      <div class="fld"><input type="hidden" id="mp-eid" value=""/></div>
+      <button class="btn btn-p w100" id="mp-save">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Ajouter le partenaire
+      </button>`;
+    document.getElementById('mp-save').addEventListener('click',()=>INT.savePartner());
+    openModal('m-partner');
+  },
+
+  async savePartner(){
+    const name=(document.getElementById('mp-name').value||'').trim();
+    if(!name){toast('Le prénom est requis','err');return}
+    const desc=(document.getElementById('mp-desc').value||'').trim();
+    const eid=document.getElementById('mp-eid').value;
+    if(eid){const p=this.partners.find(x=>x.id===eid);if(p){p.name=name;p.desc=desc}}
+    else this.partners.push({id:'p_'+Date.now(),name,desc,createdAt:new Date().toISOString()});
+    await this.save();this.renderPartners();closeModal('m-partner');toast('Partenaire enregistré');
+  },
+
+  async deletePartner(pid){
+    if(!confirm('Supprimer ce partenaire et toutes ses relations ?'))return;
+    this.partners=this.partners.filter(p=>p.id!==pid);
+    this.relations=this.relations.filter(r=>r.partnerId!==pid);
+    await this.save();
+    if(this.activePid===pid)this.showList();
+    else{this.renderPartners();this.renderWeekly()}
+    toast('Partenaire supprimé','inf');
+  },
+
+  renderWeekly(){
+    const div=document.getElementById('weekly-recap');
+    const tday=ld(new Date()),dow=tday.getDay();
+    const mon=ad(tday,-(dow===0?6:dow-1));
+    const weeks=[];
+    for(let w=0;w<4;w++){
+      const ws=ad(mon,-w*7),we=ad(ws,6);
+      const rels=this.relations.filter(r=>{const d=ld(r.date);return d>=ws&&d<=we});
+      weeks.push({ws,we,rels,lbl:w===0?'Cette semaine':w===1?'Semaine passée':`Il y a ${w} semaines`});
+    }
+    const active=weeks.filter(w=>w.rels.length>0);
+    if(!active.length){div.innerHTML='';return}
+    const title=`<div class="sec-t">Récapitulatif hebdomadaire</div>`;
+    const blocks=active.map(w=>{
+      const byP={};w.rels.forEach(r=>{if(!byP[r.partnerId])byP[r.partnerId]=[];byP[r.partnerId].push(r)});
+      const high=w.rels.filter(r=>r.risk==='high').length,med=w.rels.filter(r=>r.risk==='medium').length,low=w.rels.filter(r=>r.risk==='low').length,prot=w.rels.filter(r=>r.protection!=='none').length;
+      return`<div class="recap-block">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-weight:600;font-size:14px">${w.lbl}</span>
+          <span style="font-size:11px;color:var(--mu)">${fd(w.ws)} → ${fd(w.we)}</span>
+        </div>
+        ${Object.entries(byP).map(([pid,rels])=>{const p=INT.partners.find(x=>x.id===pid);return`<div class="recap-row"><span style="font-weight:500;flex:1">${p?esc(p.name):'Inconnu'}</span><span class="badge b-gy">${rels.length}×</span></div>`}).join('')}
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;padding-top:9px;border-top:1px solid var(--bd)">
+          ${high?`<span class="risk rk-r" style="font-size:11px;padding:3px 8px">Zone rouge ×${high}</span>`:''}
+          ${med?`<span class="risk rk-o" style="font-size:11px;padding:3px 8px">Zone orange ×${med}</span>`:''}
+          ${low?`<span class="risk rk-g" style="font-size:11px;padding:3px 8px">Zone verte ×${low}</span>`:''}
+          ${prot?`<span class="badge b-sg">Protégé ×${prot}</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    div.innerHTML=title+blocks;
+  },
+
+  lock(){this.unlocked=false;this.pin='';this.activePid=null;goPage('cycle');toast('Espace verrouillé','inf')},
+
+  async changePin(){
+    if(!confirm('Changer le code confidentiel ?'))return;
+    const saved={partners:[...this.partners],relations:[...this.relations]};
+    localStorage.removeItem(IK.P);this.unlocked=false;this.pin='';
+    P.init(false);this.partners=saved.partners;this.relations=saved.relations;
+  },
+
+  async deleteAll(){
+    if(!confirm('Supprimer TOUTES les données intimes ? Action irréversible.'))return;
+    localStorage.removeItem(IK.D);localStorage.removeItem(IK.P);
+    this.partners=[];this.relations=[];this.unlocked=false;this.pin='';this.activePid=null;
+    goPage('cycle');toast('Données intimes effacées','inf');
+  }
+};
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+(function init(){
+  loadApp();
+  applyTheme(A.theme);
+  syncForm();
+  buildChips('sym-chips','sym-chip');
+  document.getElementById('e-date').value=today();
+  renderCal();updateSum();updateStats();renderKnow();updateRemTxt();
+  checkReminder();setInterval(checkReminder,60000);
+  if('Notification' in window&&Notification.permission==='default')setTimeout(()=>Notification.requestPermission(),3000);
+})();
+</script>
+</body>
+</html>
